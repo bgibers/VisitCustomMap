@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css">
+  <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet-src.js"></script>
+
+  <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+
+  <style>
+    #map {
+      height: 500px;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script src="countries.geo.js"></script>
+  <script src="unitedStates.geo.js"></script>
+
+  <script type="application/javascript">
+    var map = L.map("map").setView([30, 0], 2);
+
+ L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png', {
+    attribution: '&copy VISIT | &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+    noWrap: true,
+    bounds: [
+    [-90, -180],
+    [90, 180]
+  ]
+  }).addTo(map)
+    
+    var myStyle = {
+      fillColor: "grey",
+        weight: 1,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    }
+
+    //load in countries.geo.js
+    var myGeojSonLayerGroup = L.geoJson(world, {
+      style: myStyle
+    }).addTo(map).addData(unitedStates)
+
+    // var unitedStatesjSonLayerGroup = L.geoJson(unitedStates, {
+    //   style: myStyle
+    // }).addTo(map)
+
+
+function changeVisitStatus(locationName, status) {
+  myGeojSonLayerGroup.eachLayer(function (layer) {  
+    if(layer.feature.properties.name === locationName) {    
+      if (status === "toVisit") {
+        layer.setStyle({fillColor :'red'})
+      } else if (status === "visited") {
+        layer.setStyle({fillColor : 'blue'})
+      }
+    }
+  })
+}
+ </script>
+</body>
+
+</html>
