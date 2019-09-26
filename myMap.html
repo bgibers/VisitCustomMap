@@ -1,0 +1,178 @@
+<script src="amcharts4/core.js"></script>
+<script src="amcharts4/maps.js"></script>
+<script src="amcharts4/geodata/lows/worldLow.js"></script>
+<script src="amcharts4/geodata/lows/usaLow.js"></script>
+<script src="amcharts4/themes/animated.js"></script><script> 
+
+var polygonTemplate;
+var worldSeries;
+
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+// Create map instance
+var chart = am4core.create("chartdiv", am4maps.MapChart);
+//chart.background.fill = am4core.color("#aadaff");
+//chart.background.fillOpacity = 1;
+    
+chart.geodata = am4geodata_worldLow;
+
+// Set projection
+chart.projection = new am4maps.projections.Miller();
+
+// Zoom control
+chart.zoomControl = new am4maps.ZoomControl();
+
+// Series for World map
+worldSeries = chart.series.push(new am4maps.MapPolygonSeries());
+worldSeries.exclude = ["AQ"];
+worldSeries.useGeodata = true;
+
+polygonTemplate = worldSeries.mapPolygons.template;
+polygonTemplate.tooltipText = "{name}";
+// polygonTemplate.fill = chart.colors.getIndex(0);
+polygonTemplate.nonScalingStroke = true;
+polygonTemplate.applyOnClones = true;
+polygonTemplate.togglable = true;
+polygonTemplate.tooltipText = "{name}";
+polygonTemplate.strokeOpacity = 0.5;
+
+var lastSelected;
+
+// Create active state
+var activeState = polygonTemplate.states.create("active");
+// activeState.properties.fill = chart.colors.getIndex(4);
+
+//Create visited state
+var visited = polygonTemplate.states.create("visited");
+visited.properties.fill = am4core.color("#E94F37");
+
+//ToVisit state
+var toVisit = polygonTemplate.states.create("toVisit");
+toVisit.properties.fill = am4core.color("#0000FF");
+
+// Hover state
+// var hs = polygonTemplate.states.create("hover");
+// hs.properties.fill = chart.colors.getIndex(4);
+
+// Series for United States map
+var usaSeries = chart.series.push(new am4maps.MapPolygonSeries());
+usaSeries.geodata = am4geodata_usaLow;
+
+var usPolygonTemplate = usaSeries.mapPolygons.template;
+usPolygonTemplate.tooltipText = "{name}";
+// usPolygonTemplate.fill = chart.colors.getIndex(1);
+usPolygonTemplate.nonScalingStroke = true;
+
+// Hover state
+// var usahs = usPolygonTemplate .states.create("hover");
+// usahs.properties.fill = chart.colors.getIndex(4);
+
+console.log(polygonTemplate)
+console.log(worldSeries)
+
+polygonTemplate.events.on("hit", function(ev) {
+    var data = ev.target.dataItem.dataContext;
+    console.log(data.id)
+    console.log(data.name)
+    console.log(data.visited)
+    //chttps://codepen.io/team/amcharts/pen/qgLprb
+    //create seperate json file to read id's from 
+
+  // if (lastSelected) {
+  //   // This line serves multiple purposes:
+  //   // 1. Clicking a country twice actually de-activates, the line below
+  //   //    de-activates it in advance, so the toggle then re-activates, making it
+  //   //    appear as if it was never de-activated to begin with.
+  //   // 2. Previously activated countries should be de-activated.
+  //   lastSelected.isActive = false;
+  // }
+
+  ev.target.series.chart.zoomToMapObject(ev.target);
+  if (lastSelected !== ev.target) {
+    lastSelected = ev.target;
+  }
+});
+
+
+usPolygonTemplate.events.on("hit", function(ev) {
+    var data = ev.target.dataItem.dataContext;
+    console.log(data.id)
+    console.log(data.name)
+    console.log(data.visited)
+
+  // if (lastSelected) {
+  //   // This line serves multiple purposes:
+  //   // 1. Clicking a country twice actually de-activates, the line below
+  //   //    de-activates it in advance, so the toggle then re-activates, making it
+  //   //    appear as if it was never de-activated to begin with.
+  //   // 2. Previously activated countries should be de-activated.
+  //   lastSelected.isActive = false;
+  // }
+
+  ev.target.series.chart.zoomToMapObject(ev.target);
+  if (lastSelected !== ev.target) {
+    lastSelected = ev.target;
+  }
+});
+
+//Home button
+var homeButton = new am4core.Button();
+homeButton.events.on("hit", function(){
+  chart.goHome();
+});
+
+var addButton = new am4core.Button();
+addButton.events.on("hit", function(){
+  changeVisitStatus(lastSelected.dataItem.dataContext.id,"toVisit");
+});
+
+homeButton.icon = new am4core.Sprite();
+homeButton.padding(7, 5, 7, 5);
+homeButton.width = 30;
+homeButton.icon.path = "M16,8 L14,8 L14,16 L10,16 L10,10 L6,10 L6,16 L2,16 L2,8 L0,8 L8,0 L16,8 Z M16,8";
+homeButton.marginBottom = 10;
+homeButton.parent = chart.zoomControl;
+homeButton.insertBefore(chart.zoomControl.plusButton);
+
+// new location button
+
+addButton.padding(7, 5, 7, 5);
+addButton.width = 30;
+addButton.marginBottom = 10;
+addButton.parent = chart.zoomControl;
+
+var editImage = addButton.createChild(am4core.Image);
+editImage.href = "mapedit.png";
+editImage.width = 15;
+editImage.height = 15;
+addButton.insertBefore(chart.zoomControl.homeButton);
+
+}); // end am4core.ready()
+
+
+
+function changeVisitStatus(locationName, status) { 
+    
+    console.log(locationName);
+    var data = worldSeries.getPolygonById(locationName);
+   
+    if (status === "visited") {
+        data.setState("visited");
+    } 
+
+    else if (status === "toVisit") {
+      data.setState("toVisit");
+    }
+};
+
+
+
+</script>
+
+<!-- HTML -->
+<!-- Create div that shows selected and status -->
+<div id="chartdiv"></div>
