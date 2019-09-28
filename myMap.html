@@ -6,6 +6,7 @@
 
 var polygonTemplate;
 var worldSeries;
+var usaSeries;
 
 am4core.ready(function() {
 
@@ -16,14 +17,9 @@ am4core.useTheme(am4themes_animated);
 // Create map instance
 var chart = am4core.create("chartdiv", am4maps.MapChart);
 //chart.background.fill = am4core.color("#aadaff");
-//chart.background.fillOpacity = 1;
-    
+//chart.background.fillOpacity = 1;  
 chart.geodata = am4geodata_worldLow;
-
-// Set projection
-chart.projection = new am4maps.projections.Miller();
-
-// Zoom control
+chart.projection = new am4maps.projections.Miller(); 
 chart.zoomControl = new am4maps.ZoomControl();
 
 // Series for World map
@@ -40,32 +36,35 @@ polygonTemplate.togglable = true;
 polygonTemplate.tooltipText = "{name}";
 polygonTemplate.strokeOpacity = 0.5;
 
-var lastSelected;
 
-// Create active state
+// Create states for world map
+var lastSelected;
 var activeState = polygonTemplate.states.create("active");
 // activeState.properties.fill = chart.colors.getIndex(4);
 
-//Create visited state
-var visited = polygonTemplate.states.create("visited");
-visited.properties.fill = am4core.color("#E94F37");
-
-//ToVisit state
-var toVisit = polygonTemplate.states.create("toVisit");
-toVisit.properties.fill = am4core.color("#0000FF");
-
-// Hover state
 // var hs = polygonTemplate.states.create("hover");
 // hs.properties.fill = chart.colors.getIndex(4);
 
+var visited = polygonTemplate.states.create("visited");
+visited.properties.fill = am4core.color("#0000FF");
+
+var toVisit = polygonTemplate.states.create("toVisit");
+toVisit.properties.fill = am4core.color("#E94F37");
+
 // Series for United States map
-var usaSeries = chart.series.push(new am4maps.MapPolygonSeries());
+usaSeries = chart.series.push(new am4maps.MapPolygonSeries());
 usaSeries.geodata = am4geodata_usaLow;
 
 var usPolygonTemplate = usaSeries.mapPolygons.template;
 usPolygonTemplate.tooltipText = "{name}";
 // usPolygonTemplate.fill = chart.colors.getIndex(1);
 usPolygonTemplate.nonScalingStroke = true;
+
+var usVisited = usPolygonTemplate.states.create("visited");
+usVisited.properties.fill = am4core.color("#0000FF");
+
+var usToVisit = usPolygonTemplate.states.create("toVisit");
+usToVisit.properties.fill = am4core.color("#E94F37");
 
 // Hover state
 // var usahs = usPolygonTemplate .states.create("hover");
@@ -82,15 +81,6 @@ polygonTemplate.events.on("hit", function(ev) {
     //chttps://codepen.io/team/amcharts/pen/qgLprb
     //create seperate json file to read id's from 
 
-  // if (lastSelected) {
-  //   // This line serves multiple purposes:
-  //   // 1. Clicking a country twice actually de-activates, the line below
-  //   //    de-activates it in advance, so the toggle then re-activates, making it
-  //   //    appear as if it was never de-activated to begin with.
-  //   // 2. Previously activated countries should be de-activated.
-  //   lastSelected.isActive = false;
-  // }
-
   ev.target.series.chart.zoomToMapObject(ev.target);
   if (lastSelected !== ev.target) {
     lastSelected = ev.target;
@@ -103,15 +93,6 @@ usPolygonTemplate.events.on("hit", function(ev) {
     console.log(data.id)
     console.log(data.name)
     console.log(data.visited)
-
-  // if (lastSelected) {
-  //   // This line serves multiple purposes:
-  //   // 1. Clicking a country twice actually de-activates, the line below
-  //   //    de-activates it in advance, so the toggle then re-activates, making it
-  //   //    appear as if it was never de-activated to begin with.
-  //   // 2. Previously activated countries should be de-activated.
-  //   lastSelected.isActive = false;
-  // }
 
   ev.target.series.chart.zoomToMapObject(ev.target);
   if (lastSelected !== ev.target) {
@@ -151,15 +132,51 @@ editImage.width = 15;
 editImage.height = 15;
 addButton.insertBefore(chart.zoomControl.homeButton);
 
+
+// This auto-generates a legend according to each series' name and fill
+
+// Legend styles
+// chart.legend.paddingLeft = 27;
+// chart.legend.paddingRight = 27;
+// chart.legend.marginBottom = 15;
+// chart.legend.width = am4core.percent(90);
+// chart.legend.contentAlign = "left";
+
+var legend = new am4maps.Legend();
+legend.parent = chart.chartContainer;
+legend.background.fill = am4core.color("#000");
+legend.background.fillOpacity = 0.05;
+legend.width = 130;
+legend.align = "left";
+legend.contentAlign = "left";
+legend.padding(10, 15, 10, 15);
+legend.data = [{
+  "name": "Plans to visit",
+  "fill":"#E94F37"
+}, {
+  "name": "Visited",
+  "fill": "#0000FF"
+}];
+legend.itemContainers.template.clickable = false;
+legend.itemContainers.template.focusable = false;
+
 }); // end am4core.ready()
 
+//get longs and lat of clicked spot
+//custom loader
+//create onload function to read in all visited locations
+//read in from json file
 
 
 function changeVisitStatus(locationName, status) { 
     
     console.log(locationName);
-    var data = worldSeries.getPolygonById(locationName);
-   
+    if (locationName.toString().includes("US-")) {
+      var data = usaSeries.getPolygonById(locationName);
+    } else {
+      var data = worldSeries.getPolygonById(locationName);
+    }
+
     if (status === "visited") {
         data.setState("visited");
     } 
