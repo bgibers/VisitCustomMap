@@ -1,12 +1,24 @@
-<script src="amcharts4/core.js"></script>
-<script src="amcharts4/maps.js"></script>
-<script src="amcharts4/geodata/lows/worldLow.js"></script>
-<script src="amcharts4/geodata/lows/usaLow.js"></script>
-<script src="amcharts4/themes/animated.js"></script><script> 
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <script src="amcharts4/core.js"></script>
+  <script src="amcharts4/maps.js"></script>
+  <script src="amcharts4/geodata/lows/worldLow.js"></script>
+  <script src="amcharts4/geodata/lows/usaLow.js"></script>
+  <script src="amcharts4/geodata/lows/russiaLow.js"></script>
+  <script src="amcharts4/geodata/lows/canadaLow.js"></script>
+  <script src="amcharts4/themes/animated.js"></script>
+</head>
+<script> 
 
 var polygonTemplate;
 var worldSeries;
 var usaSeries;
+var canadaSeries;
+var russiaSeries;
 
 am4core.ready(function() {
 
@@ -21,6 +33,7 @@ var chart = am4core.create("chartdiv", am4maps.MapChart);
 chart.geodata = am4geodata_worldLow;
 chart.projection = new am4maps.projections.Miller(); 
 chart.zoomControl = new am4maps.ZoomControl();
+chart.tapToActivate = true;
 
 // Series for World map
 worldSeries = chart.series.push(new am4maps.MapPolygonSeries());
@@ -32,7 +45,7 @@ polygonTemplate.tooltipText = "{name}";
 // polygonTemplate.fill = chart.colors.getIndex(0);
 polygonTemplate.nonScalingStroke = true;
 polygonTemplate.applyOnClones = true;
-polygonTemplate.togglable = true;
+// polygonTemplate.togglable = true;
 polygonTemplate.tooltipText = "{name}";
 polygonTemplate.strokeOpacity = 0.5;
 
@@ -66,6 +79,36 @@ usVisited.properties.fill = am4core.color("#0000FF");
 var usToVisit = usPolygonTemplate.states.create("toVisit");
 usToVisit.properties.fill = am4core.color("#E94F37");
 
+
+// Series for Canada map
+canadaSeries = chart.series.push(new am4maps.MapPolygonSeries());
+canadaSeries.geodata = am4geodata_canadaLow;
+
+var canadaPolygonTemplate = canadaSeries.mapPolygons.template;
+canadaPolygonTemplate.tooltipText = "{name}";
+canadaPolygonTemplate.nonScalingStroke = true;
+
+var canadaVisited = canadaPolygonTemplate.states.create("visited");
+canadaVisited.properties.fill = am4core.color("#0000FF");
+
+var canadaToVisit = canadaPolygonTemplate.states.create("toVisit");
+canadaToVisit.properties.fill = am4core.color("#E94F37");
+
+// Series for Russia map
+russiaSeries = chart.series.push(new am4maps.MapPolygonSeries());
+russiaSeries.geodata = am4geodata_russiaLow;
+
+var russiaPolygonTemplate = russiaSeries.mapPolygons.template;
+russiaPolygonTemplate.tooltipText = "{name}";
+russiaPolygonTemplate.nonScalingStroke = true;
+
+var russiaVisited = russiaPolygonTemplate.states.create("visited");
+russiaVisited.properties.fill = am4core.color("#0000FF");
+
+var russiaToVisit = russiaPolygonTemplate.states.create("toVisit");
+russiaToVisit.properties.fill = am4core.color("#E94F37");
+
+
 // Hover state
 // var usahs = usPolygonTemplate .states.create("hover");
 // usahs.properties.fill = chart.colors.getIndex(4);
@@ -86,9 +129,34 @@ polygonTemplate.events.on("hit", function(ev) {
     lastSelected = ev.target;
   }
 });
+polygonTemplate.events.off("doubleHit");
 
 
 usPolygonTemplate.events.on("hit", function(ev) {
+    var data = ev.target.dataItem.dataContext;
+    console.log(data.id)
+    console.log(data.name)
+    console.log(data.visited)
+
+  ev.target.series.chart.zoomToMapObject(ev.target);
+  if (lastSelected !== ev.target) {
+    lastSelected = ev.target;
+  }
+});
+
+canadaPolygonTemplate.events.on("hit", function(ev) {
+    var data = ev.target.dataItem.dataContext;
+    console.log(data.id)
+    console.log(data.name)
+    console.log(data.visited)
+
+  ev.target.series.chart.zoomToMapObject(ev.target);
+  if (lastSelected !== ev.target) {
+    lastSelected = ev.target;
+  }
+});
+
+russiaPolygonTemplate.events.on("hit", function(ev) {
     var data = ev.target.dataItem.dataContext;
     console.log(data.id)
     console.log(data.name)
@@ -127,20 +195,10 @@ addButton.marginBottom = 10;
 addButton.parent = chart.zoomControl;
 
 var editImage = addButton.createChild(am4core.Image);
-editImage.href = "mapedit.png";
+editImage.href = "heart.png";
 editImage.width = 15;
 editImage.height = 15;
 addButton.insertBefore(chart.zoomControl.homeButton);
-
-
-// This auto-generates a legend according to each series' name and fill
-
-// Legend styles
-// chart.legend.paddingLeft = 27;
-// chart.legend.paddingRight = 27;
-// chart.legend.marginBottom = 15;
-// chart.legend.width = am4core.percent(90);
-// chart.legend.contentAlign = "left";
 
 var legend = new am4maps.Legend();
 legend.parent = chart.chartContainer;
@@ -148,6 +206,7 @@ legend.background.fill = am4core.color("#000");
 legend.background.fillOpacity = 0.05;
 legend.width = 130;
 legend.align = "left";
+legend.valign = "bottom"
 legend.contentAlign = "left";
 legend.padding(10, 15, 10, 15);
 legend.data = [{
@@ -160,36 +219,77 @@ legend.data = [{
 legend.itemContainers.template.clickable = false;
 legend.itemContainers.template.focusable = false;
 
+
+//manually trigger event
+//chart.zoomOutButton.dispatchImmediately("hit");
+//https://www.amcharts.com/docs/v4/concepts/event-listeners/
 }); // end am4core.ready()
 
 //get longs and lat of clicked spot
 //custom loader
 //create onload function to read in all visited locations
 //read in from json file
+//https://www.amcharts.com/docs/v4/reference/spritestate/
 
+function changeVisitStatus(locationId, status) { 
+  $('#myModal').modal('show');
+  console.log(location);
 
-function changeVisitStatus(locationName, status) { 
-    
-    console.log(locationName);
-    if (locationName.toString().includes("US-")) {
-      var data = usaSeries.getPolygonById(locationName);
-    } else {
-      var data = worldSeries.getPolygonById(locationName);
-    }
+  if (locationId.toString().includes("US-")) {
+    var data = usaSeries.getPolygonById(locationId)
+  } else if (locationId.toString().includes("CA-")) {
+    var data = canadaSeries.getPolygonById(locationId);
+  } else if (locationId.toString().includes("RU-")) {
+    var data = russiaSeries.getPolygonById(locationId);
+  } else {
+    var data = worldSeries.getPolygonById(locationId);
+  }
 
-    if (status === "visited") {
-        data.setState("visited");
-    } 
+  $('#myModalTitle').text(data.dataItem.dataContext.name); 
 
-    else if (status === "toVisit") {
-      data.setState("toVisit");
-    }
+  if (status === "visited") {
+      data.setState("visited");
+  } 
+
+  else if (status === "toVisit") {
+    data.setState("toVisit");
+  }
 };
 
-
+function onLoad() {
+  var jsonObj = [
+    {
+        "location" : "US-SC",
+        "status" : "visited"
+    }
+  ];
+  for (var i = 0; i < jsonObj.length; i++) {
+    changeVisitStatus(jsonObj[i].location,jsonObj[i].status);
+  }
+};
 
 </script>
 
 <!-- HTML -->
 <!-- Create div that shows selected and status -->
-<div id="chartdiv"></div>
+<body>
+<div id="chartdiv" onload="onLoad()"></div>
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" role="dialog">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title" id="myModalTitle">Modal Header</h4>
+          </div>
+          <div class="modal-body">
+            <p>Populate this with a description</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
